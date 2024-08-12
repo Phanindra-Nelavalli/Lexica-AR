@@ -53,7 +53,7 @@ const ArCam = () => {
 }
 const styles = StyleSheet.create({
     f1: {
-      flex: 1
+      flex: 2
     }
   });
 export default ArCam
