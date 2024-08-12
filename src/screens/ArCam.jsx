@@ -28,7 +28,7 @@ const HelloWorldSceneAR = () => {
   return (
     <ViroARScene>
       <ViroARImageMarker target="myimage" onAnchorFound={anchorFound}>
-        <ViroAmbientLight color='#ffffff' />
+        <ViroAmbientLight color='#000000' />
         <Viro3DObject
           source={require('./../assets/Part3.obj')}
           scale={[0.008, 0.008, 0.008]}
