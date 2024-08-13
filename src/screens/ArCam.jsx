@@ -45,7 +45,7 @@ const ArCam = () => {
     <ViroARSceneNavigator
       autofocus={true}
       initialScene={{
-        scene: Hellos,
+        scene: HelloWorldSceneAR,
       }}
       style={styles.f1}
     />
@@ -53,7 +53,7 @@ const ArCam = () => {
 }
 const styles = StyleSheet.create({
     f1: {
-      flex: 2
+      flex: 1
     }
   });
 export default ArCam
