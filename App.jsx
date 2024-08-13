@@ -2,6 +2,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import ArCam from './src/screens/ArCam'; // Adjust the path as needed
+import Cube from './src/screens/Cube';
 
 const Stack = createStackNavigator();
 
