@@ -7,16 +7,31 @@ import {
   ViroARSceneNavigator, 
   ViroAmbientLight, 
   ViroARTrackingTargets, 
-  ViroARImageMarker 
+  ViroARImageMarker, 
+  ViroMaterials,ViroAnimations
 } from "@reactvision/react-viro";
 
 const HelloWorldSceneAR = () => {
+
+  ViroMaterials.createMaterials({
+    wood:{diffuseTexture:require('./../assets/wood.jpeg')}
+});
+
+ViroAnimations.registerAnimations({
+  rotate:{
+      duration:2500,
+      properties:{
+          rotateY:'+=90'
+      }
+  }
+})
+
   const [text, setText] = useState('Initializing AR...');
 
   ViroARTrackingTargets.createTargets({
     myimage: {
       source: require('./../assets/my.jpg'),
-      orientation: 'down',
+      orientation: 'up',
       physicalWidth: 0.03 // physical width in meters
     }
   });
@@ -33,7 +48,10 @@ const HelloWorldSceneAR = () => {
           source={require('./../assets/Part3.obj')}
           scale={[0.008, 0.008, 0.008]}
           rotation={[-170, 0, 0]}
+         // position={[0,-1,-2]}
           type="OBJ"
+          materials={["wood"]}
+          animation={{name:'rotate',loop:true, run:true}}
         />
       </ViroARImageMarker>
     </ViroARScene>
