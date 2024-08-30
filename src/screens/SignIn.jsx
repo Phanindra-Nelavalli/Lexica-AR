@@ -1,0 +1,236 @@
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  TouchableOpacity,
+  ToastAndroid,
+  ScrollView,
+  Image,
+} from "react-native";
+import React, { useEffect, useState } from "react";
+import { useNavigation } from "@react-navigation/native";
+import { Colors } from "./../constants/Colors";
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import { auth } from "./../Configs/firebase";
+import { signInWithEmailAndPassword } from "firebase/auth";
+
+const SignIn = () => {
+  const navigation = useNavigation();
+
+  const [email, setEmail] = useState();
+  const [password, setPassword] = useState();
+  const [secureTextEntry, setSecureTextEntry] = useState(true);
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerShown: false,
+    });
+  }, [navigation]);
+
+  const togglePasswordVisibility = () => {
+    setSecureTextEntry(!secureTextEntry);
+  };
+
+  const onSignIn = () => {
+    if (!email && !password) {
+      ToastAndroid.show(
+        "Please Enter Email and Password!",
+        ToastAndroid.LONG,
+        ToastAndroid.BOTTOM
+      );
+      return;
+    } else if (!email) {
+      ToastAndroid.show(
+        "Please Enter Email!",
+        ToastAndroid.LONG,
+        ToastAndroid.BOTTOM
+      );
+      return;
+    } else if (!password) {
+      ToastAndroid.show(
+        "Please Enter Password!",
+        ToastAndroid.LONG,
+        ToastAndroid.BOTTOM
+      );
+      return;
+    }
+
+    signInWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        const user = userCredential.user;
+        console.log(user);
+        if (user.emailVerified) {
+          navigation.replace("Home");
+        } else {
+          navigation.replace("EmailVerify");
+        }
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        console.log(errorMessage, errorCode);
+        if (errorCode === "auth/invalid-credential") {
+          ToastAndroid.show(
+            "Invalid Credentials!",
+            ToastAndroid.LONG,
+            ToastAndroid.BOTTOM
+          );
+        }
+      });
+  };
+  return (
+    <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+      <View style={styles.container}>
+        <View style={styles.centeredContainer}>
+          <Image
+            source={require("./../assets/images/studentrbg.png")}
+            style={styles.image}
+          />
+          <Text style={styles.title}>Student Sign-In</Text>
+        </View>
+        <View style={styles.formContainer}>
+          <Text style={styles.label}>Email-Id</Text>
+          <TextInput
+            style={styles.input}
+            value={email}
+            onChangeText={setEmail}
+            placeholder="Enter Your College Email Id"
+            placeholderTextColor={Colors.white}
+          />
+
+          <Text style={styles.label}>Password</Text>
+          <View style={styles.passwordContainer}>
+            <TextInput
+              secureTextEntry={secureTextEntry}
+              value={password}
+              onChangeText={setPassword}
+              placeholder="Enter Your Password"
+              placeholderTextColor={Colors.white}
+              style={styles.passwordInput}
+            />
+            <TouchableOpacity
+              onPress={togglePasswordVisibility}
+              style={styles.icon}
+            >
+              <MaterialIcons
+                name={secureTextEntry ? "visibility" : "visibility-off"}
+                size={24}
+                color={Colors.white}
+              />
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity style={styles.btn} onPress={onSignIn}>
+            <Text style={styles.btnText}>Sign In</Text>
+          </TouchableOpacity>
+          <Text style={styles.alternate}>
+            New To Lexica AR?{" "}
+            <Text
+              onPress={() => navigation.navigate("SignUp")}
+              style={styles.signIn}
+            >
+              Sign up
+            </Text>
+          </Text>
+        </View>
+      </View>
+    </ScrollView>
+  );
+};
+
+export default SignIn;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.DarkYellow,
+  },
+  centeredContainer: {
+    alignItems: "center",
+    marginBottom: 30,
+  },
+  backButton: {
+    alignSelf: "flex-start",
+    marginLeft: 15,
+    marginTop: 18,
+  },
+  title: {
+    fontSize: 33,
+    fontFamily: "outfit-bold",
+    marginTop: 15,
+    color: Colors.DarkBlue,
+  },
+  image: {
+    width: 200,
+    height: 200,
+    resizeMode: "contain",
+  },
+  formContainer: {
+    padding: 25,
+    borderRadius: 29,
+    width: "100%",
+    backgroundColor: Colors.DarkBlue,
+    height: "100%",
+  },
+  label: {
+    fontSize: 17,
+    marginHorizontal: 15,
+    marginBottom: 5,
+    color: Colors.DarkYellow,
+    fontFamily: "outfit-medium",
+  },
+  input: {
+    padding: 15,
+    borderWidth: 1,
+    borderRadius: 10,
+    margin: 15,
+    fontFamily: "outfit",
+    marginTop: 8,
+    borderColor: Colors.white,
+    fontSize: 14,
+    color: Colors.white,
+  },
+  passwordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderRadius: 10,
+    margin: 15,
+    marginTop: 1,
+    borderColor: Colors.white,
+  },
+  passwordInput: {
+    flex: 1,
+    padding: 15,
+    fontFamily: "outfit",
+    fontSize: 14,
+    color: Colors.white,
+  },
+  icon: {
+    padding: 15,
+  },
+  btn: {
+    backgroundColor: Colors.DarkYellow,
+    padding: 10,
+    borderRadius: 99,
+    marginHorizontal: 15,
+    marginTop: 30,
+  },
+  btnText: {
+    fontSize: 17,
+    fontFamily: "outfit-medium",
+    textAlign: "center",
+    color: Colors.DarkBlue,
+  },
+  alternate: {
+    fontSize: 17,
+    fontFamily: "outfit-medium",
+    textAlign: "center",
+    color: Colors.white,
+    marginTop: 15,
+  },
+  signIn: {
+    color: Colors.DarkYellow,
+    fontSize: 17,
+  },
+});
