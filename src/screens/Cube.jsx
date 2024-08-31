@@ -1,68 +1,90 @@
 import React, { useState } from "react";
-import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
-import { ViroARSceneNavigator } from "@reactvision/react-viro";
-import Sceondscene from "./Sceondscene";
+import { StyleSheet } from "react-native";
+import {
+  ViroARScene,
+  Viro3DObject,
+  ViroARSceneNavigator,
+  ViroAmbientLight,
+  ViroARTrackingTargets,
+  ViroARImageMarker,
+  ViroMaterials,
+  ViroAnimations,
+  ViroBox,
+} from "@reactvision/react-viro";
+import { firestore } from "./../Configs/firestore"; // Import Firestore from your config2.js
+import { Buffer } from "buffer"; // Import Buffer for hash computation
+import md5 from "md5"; // Import md5 hashing library
 
-const Cube = () => {
-  const [rotationAxis, setRotationAxis] = useState(null);
+const HelloWorldSceneAR = () => {
+  const [position, setPosition] = useState([0, -1, -2]);
+  const [currentAnimation, setCurrentAnimation] = useState("rotateX");
 
-  const handleButtonPress = (axis) => {
-    setRotationAxis(axis);
-    setTimeout(() => {
-      setRotationAxis(null); 
-    }, 2000); 
+  ViroMaterials.createMaterials({
+    wood: { diffuseTexture: require("./../assets/images/woodmat.jpeg") },
+  });
+
+  ViroAnimations.registerAnimations({
+    rotateX: {
+      duration: 3000, // 10 seconds
+      properties: { rotateX: "+=90" },
+    },
+    rotateY: {
+      duration: 3000, // 10 seconds
+      properties: { rotateY: "+=90" },
+    },
+    rotateZ: {
+      duration: 3000, // 10 seconds
+      properties: { rotateZ: "+=90" },
+    },
+  });
+
+  const handleDrag = (newPosition) => {
+    setPosition(newPosition);
   };
 
+  const handleAnimationFinished = () => {
+    const animations = ["rotateX", "rotateY", "rotateZ"];
+    const nextIndex =
+      (animations.indexOf(currentAnimation) + 1) % animations.length;
+    setCurrentAnimation(animations[nextIndex]);
+  };
+
+  
+
   return (
-    <View style={{ flex: 1 }}>
-      <ViroARSceneNavigator
-        initialScene={{
-          scene: () => <Sceondscene rotationAxis={rotationAxis} />,
+    <ViroARScene>
+      <ViroAmbientLight color="#ffffff" />
+
+      <ViroBox
+        width={2}
+        height={2}
+        length={2}
+        position={position}
+        scale={[0.3, 0.3, 0.3]}
+        materials={["wood"]}
+        onDrag={handleDrag}
+        animation={{
+          name: currentAnimation,
+          loop: false,
+          run: true,
+          onFinish: handleAnimationFinished,
         }}
-        style={{ flex: 1 }}
       />
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => handleButtonPress("X")}
-        >
-          <Text style={styles.buttonText}>Rotate X</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => handleButtonPress("Y")}
-        >
-          <Text style={styles.buttonText}>Rotate Y</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => handleButtonPress("Z")}
-        >
-          <Text style={styles.buttonText}>Rotate Z</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+    </ViroARScene>
   );
 };
 
-const styles = StyleSheet.create({
-  buttonContainer: {
-    position: "absolute",
-    bottom: 30,
-    flexDirection: "row",
-    justifyContent: "space-around",
-    width: "100%",
-  },
-  button: {
-    backgroundColor: "#007AFF",
-    padding: 15,
-    borderRadius: 8,
-    marginHorizontal: 10,
-  },
-  buttonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-  },
-});
+const Cube = () => {
+  return (
+    <ViroARSceneNavigator
+      initialScene={{
+        scene: HelloWorldSceneAR,
+      }}
+      style={{ flex: 1 }}
+    />
+  );
+};
+
+const styles = StyleSheet.create({});
 
 export default Cube;

@@ -19,7 +19,7 @@ const Home = () => {
 
   return (
     <View style={styles.container}>
-      <Button title="AR Camera" />
+      <Button title="AR Camera" onPress={()=>navigation.navigate("ARDetection")} />
       <Button title="Sample" />
       <Button title="Sign Out" onPress={() => onSignOut()} />
     </View>

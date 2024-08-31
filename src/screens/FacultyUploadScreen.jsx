@@ -15,6 +15,7 @@ import DocumentPicker from "react-native-document-picker";
 import Video from "react-native-video";
 import RNFS from "react-native-fs";
 import { storage, firestore } from "./../Configs/firestore";
+import CryptoJS from "crypto-js";
 import { Buffer } from "buffer";
 
 global.Buffer = Buffer;
@@ -56,22 +57,49 @@ const FacultyUploadScreen = () => {
     );
   };
 
+  const computeImageHash = async (uri) => {
+    try {
+      const response = await fetch(uri);
+      const imageData = await response.arrayBuffer();
+
+      const wordArray = CryptoJS.lib.WordArray.create(Buffer.from(imageData));
+      const hash = CryptoJS.MD5(wordArray).toString(CryptoJS.enc.Hex);
+
+      return hash;
+    } catch (error) {
+      console.error("Error computing image hash:", error);
+      return null;
+    }
+  };
+
   const checkIfImageExists = async (imageUri) => {
     try {
-      // Generate a unique image ID (you can use a hash or a unique identifier)
-      const imageName = imageUri.split("/").pop();
-      const imageRef = storage.ref().child(`images/${imageName}`);
-      const imageUrl = await imageRef.getDownloadURL();
-      setIsImageDuplicate(true); // If image exists, set duplicate status to true
-      Alert.alert(
-        "Image already exists",
-        "The selected image has already been uploaded."
-      );
+      const imageHash = await computeImageHash(imageUri);
+      if (!imageHash) {
+        Alert.alert("Error", "Failed to compute hash for the image.");
+        return;
+      }
+
+      const querySnapshot = await firestore
+        .collection("mediaLinks")
+        .where("imageHash", "==", imageHash)
+        .get();
+
+      if (!querySnapshot.empty) {
+        setIsImageDuplicate(true);
+        console.log("Image already exists with hash:", imageHash); // Completed console.log to print the hash value
+        Alert.alert(
+          "Image already exists",
+          "The selected image has already been uploaded."
+        );
+      } else {
+        setIsImageDuplicate(false);
+        setImageUri(imageUri);
+        setImageId(imageHash); // Store hash as the image ID for uniqueness
+        console.log("Image selected:", imageUri);
+      }
     } catch (error) {
-      // If the image does not exist, proceed to upload
-      setIsImageDuplicate(false);
-      setImageUri(imageUri);
-      console.log("Image selected:", imageUri);
+      console.error("Error checking if image exists:", error);
     }
   };
 
@@ -162,12 +190,10 @@ const FacultyUploadScreen = () => {
         console.log("Uploading image...");
         const response = await fetch(imageUri);
         const blob = await response.blob();
-        const imageName = imageUri.split("/").pop();
-        const imageRef = storage.ref().child(`images/${imageName}`);
+        const imageRef = storage.ref().child(`images/${imageId}.jpg`); // Use hash as file name
         await imageRef.put(blob);
         imageUrl = await imageRef.getDownloadURL();
         console.log("Image uploaded:", imageUrl);
-        setImageId(imageName); // Store the image ID for Firestore document
       }
 
       // Upload Video
@@ -193,12 +219,12 @@ const FacultyUploadScreen = () => {
 
       // Prepare Firestore document
       const mediaDoc = {
-        ...(imageUrl && { imageUrl }),
+        ...(imageUrl && { imageUrl, imageHash: imageId }), // Save hash with image URL
         ...(videoUrl && { videoUrl }),
         ...(objUrl && { objUrl }),
       };
 
-      console.log("mediaDoc before upload:", mediaDoc); 
+      console.log("mediaDoc before upload:", mediaDoc);
 
       if (Object.keys(mediaDoc).length > 0 && imageId) {
         console.log("Uploading to Firestore:", mediaDoc);
