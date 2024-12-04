@@ -10,7 +10,7 @@ const Welcome = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       const user = auth.currentUser;
-      console.log(user);
+      console.log(user); 
       if (!user) {
         navigation.navigate("Onboarding");
       } else {
